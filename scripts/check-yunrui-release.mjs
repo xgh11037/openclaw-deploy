@@ -37,6 +37,10 @@ function readIfText(path) {
   return buf.toString('utf8');
 }
 
+function normPath(path) {
+  return String(path).replace(/\\/g, '/');
+}
+
 const pkg = readJson('package.json');
 check('package name', pkg.name === 'yunrui-openclaw', `expected yunrui-openclaw, got ${pkg.name}`);
 check('build script', pkg.scripts?.build === 'tsc && vite build', 'expected tsc && vite build');
@@ -84,7 +88,10 @@ const blockedUiPatterns = [
 const scanFiles = [
   ...walkFiles('src'),
   ...walkFiles('public'),
-  ...walkFiles('scripts').filter((file) => file !== 'scripts/check-yunrui-release.mjs'),
+  ...walkFiles('scripts').filter((file) => normPath(file) !== 'scripts/check-yunrui-release.mjs'),
+  ...walkFiles('release-offline'),
+  ...walkFiles('release-offline-fix'),
+  'install.sh',
   '使用文档.md',
   '云睿OpenClaw发布说明.md',
   'RELEASE_CHECKLIST.md',
@@ -93,6 +100,7 @@ const scanFiles = [
 ].filter((v, i, a) => a.indexOf(v) === i && existsSync(join(root, v)));
 const blockedHits = [];
 for (const file of scanFiles) {
+  if (/\.(exe|dll|png|jpg|jpeg|gif|webp|ico|zip)$/i.test(normPath(file))) continue;
   const text = readIfText(file);
   for (const pattern of blockedUiPatterns) {
     if (text.includes(pattern)) blockedHits.push(`${file}: ${pattern}`);

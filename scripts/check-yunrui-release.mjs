@@ -22,7 +22,7 @@ function walkFiles(dir, out = []) {
     const p = join(abs, name);
     const st = statSync(p);
     if (st.isDirectory()) {
-      if (['node_modules', 'dist', 'target', '.git', 'github-artifacts', 'release'].includes(name)) continue;
+      if (['node_modules', 'dist', 'target', '.git', 'github-artifacts', 'release', 'resources', 'bundled-node-modules', 'bundled-extensions'].includes(name)) continue;
       walkFiles(join(dir, name), out);
     } else {
       out.push(join(dir, name));
@@ -83,6 +83,8 @@ const blockedUiPatterns = [
   'Telegram 群',
   '打开 GitHub 项目',
   'clawd.bot/docs',
+  'https://docs.openclaw.ai',
+  '官方文档',
   '想用更多高端模型？加群',
 ];
 const scanFiles = [

@@ -10,6 +10,7 @@ on:
   push:
     branches:
       - main
+      - yunrui-clawx-windows
     paths:
       - 'src/**'
       - 'electron/**'

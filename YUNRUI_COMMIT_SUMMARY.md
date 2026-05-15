@@ -25,7 +25,7 @@ feat: add Yunrui OpenClaw Windows release flow
   - 检查 Node/npm/Cargo
   - release 为空时拒绝生成空 zip
   - 发布包包含合规/检查/Actions 文档和 `LICENSE`
-- 新增 GitHub Actions Windows 构建 workflow。
+- 新增 GitHub Actions Windows 构建 workflow（使用 `pwsh` 执行发布脚本，避免 Windows PowerShell 5.1 中文路径/字符串编码问题）。
 - 新增发布前检查脚本 `npm run check:yunrui`。
 - 新增交付文档：
   - `云睿OpenClaw发布说明.md`

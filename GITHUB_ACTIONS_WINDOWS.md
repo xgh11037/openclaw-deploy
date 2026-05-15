@@ -36,8 +36,10 @@ workflow 会依次执行：
 ```bash
 npm ci
 npm run check:yunrui
-powershell -ExecutionPolicy Bypass -File scripts\build-release.ps1
+./scripts/build-release.ps1
 ```
+
+发布脚本在 GitHub Actions 中使用 `pwsh` 运行，避免 Windows PowerShell 5.1 对中文文件名/字符串编码处理不一致导致脚本解析失败。
 
 `check:yunrui` 会先检查品牌名、API Key 双入口、合规文件、Windows 发布命名和构建脚本关键逻辑。检查失败时不会继续打包。
 

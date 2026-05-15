@@ -38,10 +38,10 @@ jobs:
         run: npm run check:yunrui
 
       - name: Build release zip
-        shell: powershell
+        shell: pwsh
         env:
           VITE_YUNRUI_RELAY_STATION_URL: ${{ secrets.YUNRUI_RELAY_STATION_URL }}
-        run: powershell -ExecutionPolicy Bypass -File scripts\build-release.ps1
+        run: ./scripts/build-release.ps1
 
       - name: Upload release folder
         uses: actions/upload-artifact@v4

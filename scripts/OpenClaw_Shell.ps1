@@ -171,7 +171,7 @@ function Write-Header {
   Write-Host "  [5]  检查更新 - 升级 OpenClaw 到最新版" -ForegroundColor White
   Write-Host "  [6]  打开对话界面 - Control UI 网页" -ForegroundColor White
   Write-Host "  [7]  配置路径 - 查看安装目录 / 添加 PATH" -ForegroundColor White
-  Write-Host "  [8]  帮助与文档 - 打开官方文档" -ForegroundColor White
+  Write-Host "  [8]  帮助与配置 - 查看本地使用提示" -ForegroundColor White
   Write-Host "  [9]  安装管理 - 嗅探 / 删除 / 热迁移" -ForegroundColor White
   Write-Host "  [10] 工具箱 - 备份 / 恢复 / 诊断 / 代理" -ForegroundColor White
   Write-Host "  [0]  退出" -ForegroundColor White
@@ -1293,7 +1293,7 @@ while ($true) {
           } else {
             $modelId = $FIXED_SILICONFLOW_MODELS[0].id
           }
-          Write-Host "想用更多高端模型？加群 1085253453 解锁！" -ForegroundColor Cyan
+          Write-Host "想用更多高端模型？请使用云睿中转站获取 API Key。" -ForegroundColor Cyan
         } elseif ($provider -ne "custom") {
           Write-Host ""
           Write-Host "正在拉取可用模型列表..." -ForegroundColor Cyan
@@ -1531,9 +1531,8 @@ while ($true) {
     "8" {
       Write-Host ""
       Write-Host "OpenClaw 文档:" -ForegroundColor Cyan
-      Write-Host "  https://docs.openclaw.ai/cli" -ForegroundColor White
-      Write-Host "  https://docs.openclaw.ai/" -ForegroundColor White
-      try { Start-Process "https://docs.openclaw.ai/cli" } catch {}
+      Write-Host "  请优先查看发布包内的 使用文档.md 与 云睿OpenClaw发布说明.md" -ForegroundColor White
+      Write-Host "  API Key 获取入口：云睿中转站 / API Key" -ForegroundColor White
       Pause-Wait
     }
     "9" {

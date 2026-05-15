@@ -1137,7 +1137,7 @@ function channelInstanceBelongsToAgent(channel: string, instanceId: string, agen
   return !!inferred && inferred.toLowerCase() === (agentId || "").trim().toLowerCase();
 }
 const DEPLOY_SUCCESS_DIALOG =
-  "恭喜部署完成！如果后续在使用、配置或渠道接入过程中遇到问题，可以加入 QQ 群 1085253453 交流反馈。";
+  "恭喜部署完成！如果还没有 API Key，可以从左侧“云睿中转站 / API Key”入口获取；已拥有 API Key 的用户也可以直接填写自己的 Key。";
 
 function defaultBaseUrlForProvider(provider: string): string {
   if (provider === "kimi") return DEFAULT_KIMI_BASE_URL;
@@ -1371,7 +1371,6 @@ function App() {
   const [agentCenterTab, setAgentCenterTab] = useState<"overview" | "channels">("overview");
   const [wizardOpen, setWizardOpen] = useState(false);
   const [showCommunityHub, setShowCommunityHub] = useState(false);
-  const [communityHubView, setCommunityHubView] = useState<"links" | "qq-qr">("links");
   const [communityActionResult, setCommunityActionResult] = useState<string | null>(null);
   const [agentsList, setAgentsList] = useState<AgentsListPayload | null>(null);
   const [agentsLoading, setAgentsLoading] = useState(false);
@@ -3841,42 +3840,6 @@ function App() {
       setStartResult(`打开浏览器对话失败: ${e}`);
     }
   };
-
-  const handleOpenCommunityLink = useCallback(async (url: string, successText: string) => {
-    try {
-      await openUrl(url);
-      setCommunityActionResult(successText);
-    } catch (e) {
-      setCommunityActionResult(`打开失败: ${e}`);
-    }
-  }, []);
-
-  const handleCopyCommunityText = useCallback(async (text: string, label: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCommunityActionResult(`已复制${label}：${text}`);
-    } catch {
-      setCommunityActionResult(`复制失败，请手动复制${label}：${text}`);
-    }
-  }, []);
-
-  const handleOpenTelegramCommunity = useCallback(async () => {
-    const tgUrl = "tg://openmessage?chat_id=5292442705";
-    try {
-      await openUrl(tgUrl);
-      setCommunityActionResult("已尝试打开 Telegram 群");
-    } catch {
-      try {
-        await navigator.clipboard.writeText(tgUrl);
-      } catch {}
-      try {
-        await openUrl("https://web.telegram.org/");
-        setCommunityActionResult("当前环境不允许直接打开 tg:// 链接，已为你打开 Telegram Web，并复制群链接到剪贴板。");
-      } catch (e) {
-        setCommunityActionResult(`打开 Telegram 失败：${e}\n已尝试复制群链接：${tgUrl}`);
-      }
-    }
-  }, []);
 
   const handleResetGatewayAuth = async () => {
     if (starting) return;
@@ -7787,7 +7750,20 @@ function App() {
   const pluginInstallFeedbackCard = buildFeedbackCardModel(pluginInstallResult, "插件处理完成", 6);
   const skillsFeedbackCard = buildFeedbackCardModel(skillsResult, "Skills 处理完成", 6);
   const marketFeedbackCard = buildFeedbackCardModel(marketResult, "Skill 处理完成", 6);
-  const qqCommunityQrSrc = "/community/qq-group.png";
+  const relayStationDisplayUrl = relayStationUrl.trim() || DEFAULT_RELAY_STATION_URL;
+  const openRelayStation = useCallback(async () => {
+    const url = (relayStationUrl.trim() || DEFAULT_RELAY_STATION_URL).trim();
+    if (!url) {
+      setCommunityActionResult("还没有配置云睿中转站链接，请先在 API 服务配置里填写中转站地址，或在 GitHub Secret 注入 YUNRUI_RELAY_STATION_URL。");
+      return;
+    }
+    try {
+      await openUrl(url);
+      setCommunityActionResult("已打开云睿中转站。拿到 API Key 后，回到 AI 服务配置里填写即可。");
+    } catch (e) {
+      setCommunityActionResult(`云睿中转站链接打开失败：${e}`);
+    }
+  }, [relayStationUrl]);
   const tuningPageTitle = tuningSection === "health" ? "修复中心" : "调教中心";
   const currentTuningNav =
     tuningSection === "agents"
@@ -8182,36 +8158,25 @@ function App() {
             <button
               onClick={() => {
                 setCommunityActionResult(null);
-                setCommunityHubView("links");
+                setApiEntryMode("relay");
                 setShowCommunityHub(true);
               }}
-              className="w-full rounded-2xl border border-sky-700/60 bg-gradient-to-br from-sky-900/30 via-slate-900/90 to-indigo-950/50 px-4 py-4 text-left shadow-[0_0_0_1px_rgba(14,165,233,0.08),0_14px_28px_rgba(2,6,23,0.45)] hover:border-sky-500/70 hover:shadow-[0_0_0_1px_rgba(56,189,248,0.16),0_18px_32px_rgba(2,6,23,0.55)]"
+              className="w-full rounded-2xl border border-cyan-500/70 bg-gradient-to-br from-cyan-900/40 via-slate-900/90 to-emerald-950/50 px-4 py-4 text-left shadow-[0_0_0_1px_rgba(34,211,238,0.14),0_14px_28px_rgba(2,6,23,0.45)] hover:border-cyan-300/80 hover:shadow-[0_0_0_1px_rgba(34,211,238,0.25),0_18px_32px_rgba(2,6,23,0.55)]"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-sky-100 font-semibold text-sm">项目与社群</p>
-                  <p className="mt-1 text-[11px] leading-relaxed text-slate-300">
-                    GitHub 项目、QQ群、Telegram 群统一放这里
+                  <p className="text-cyan-100 font-semibold text-sm">云睿中转站 / API Key</p>
+                  <p className="mt-1 text-[11px] leading-relaxed text-slate-200">
+                    没有 Key 就从这里获取；已有 Key 可直接填写，不强制购买。
                   </p>
                 </div>
-                <span className="rounded-full border border-sky-500/40 bg-sky-500/10 px-2 py-0.5 text-[10px] text-sky-200">点击查看</span>
+                <span className="rounded-full border border-cyan-400/50 bg-cyan-500/15 px-2 py-0.5 text-[10px] text-cyan-100">获取 Key</span>
               </div>
               <div className="mt-3 flex flex-wrap gap-1.5 text-[10px]">
-                <span className="rounded-full border border-slate-700 bg-slate-950/50 px-2 py-1 text-slate-300">GitHub</span>
-                <span className="rounded-full border border-slate-700 bg-slate-950/50 px-2 py-1 text-slate-300">QQ群</span>
-                <span className="rounded-full border border-slate-700 bg-slate-950/50 px-2 py-1 text-slate-300">Telegram</span>
+                <span className="rounded-full border border-cyan-700 bg-slate-950/50 px-2 py-1 text-cyan-100">云睿中转站</span>
+                <span className="rounded-full border border-emerald-700 bg-slate-950/50 px-2 py-1 text-emerald-100">API Key</span>
+                <span className="rounded-full border border-slate-700 bg-slate-950/50 px-2 py-1 text-slate-300">新手入口</span>
               </div>
-            </button>
-
-            <button
-              onClick={() => openUrl("https://clawd.bot/docs")}
-              className="w-full flex items-center justify-between rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-3 text-left text-slate-300 hover:border-slate-500 hover:text-slate-200"
-            >
-              <div>
-                <p className="text-sm font-medium text-slate-100">官方文档</p>
-                <p className="mt-1 text-[11px] text-slate-400">查看官方说明、基础概念和排错资料</p>
-              </div>
-              <ExternalLink className="w-4 h-4 shrink-0" />
             </button>
           </div>
 
@@ -10133,12 +10098,12 @@ function App() {
 
       {showCommunityHub && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setShowCommunityHub(false)}>
-          <div className="w-full max-w-3xl rounded-2xl border border-slate-700 bg-slate-900 p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-2xl rounded-2xl border border-cyan-700/70 bg-slate-900 p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="text-lg font-semibold text-slate-100">项目与社群入口</h3>
-                <p className="mt-1 text-sm text-slate-400">
-                  GitHub 和 Telegram 会直接尝试打开，QQ群会优先尝试唤起 QQ；如果没反应，可以复制群号手动加入。
+                <h3 className="text-lg font-semibold text-cyan-100">云睿中转站 / API Key 获取</h3>
+                <p className="mt-1 text-sm text-slate-300">
+                  新用户可以从云睿中转站获取 API Key；已有 Key 的用户也可以直接填写自己的 Key，不强制购买。
                 </p>
               </div>
               <button
@@ -10149,159 +10114,40 @@ function App() {
               </button>
             </div>
 
-            <div className="flex gap-2 flex-wrap">
-              <button
-                onClick={() => setCommunityHubView("links")}
-                className={`rounded-lg px-3 py-1.5 text-xs border ${
-                  communityHubView === "links"
-                    ? "border-sky-500/70 bg-sky-900/40 text-sky-100"
-                    : "border-slate-700 bg-slate-800/70 text-slate-300 hover:border-slate-500"
-                }`}
-              >
-                快捷入口
-              </button>
-              <button
-                onClick={() => setCommunityHubView("qq-qr")}
-                className={`rounded-lg px-3 py-1.5 text-xs border ${
-                  communityHubView === "qq-qr"
-                    ? "border-sky-500/70 bg-sky-900/40 text-sky-100"
-                    : "border-slate-700 bg-slate-800/70 text-slate-300 hover:border-slate-500"
-                }`}
-              >
-                QQ 群二维码
-              </button>
-            </div>
-
-            {communityHubView === "links" ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="rounded-xl border border-slate-700 bg-slate-800/50 p-4 space-y-3">
-                <div>
-                  <p className="text-sm font-medium text-slate-100">GitHub 项目</p>
-                  <p className="mt-1 text-xs text-slate-400">查看项目主页、更新记录和发布版本。</p>
-                </div>
+            <div className="rounded-2xl border border-cyan-700/60 bg-cyan-950/20 p-4 space-y-3">
+              <div>
+                <p className="text-base font-semibold text-cyan-100">没有 API Key？先去云睿中转站</p>
+                <p className="mt-1 text-sm text-slate-300">
+                  打开中转站后，按页面提示获取 API Key，回来粘贴到“AI 服务配置 → 接入密钥”。
+                </p>
+              </div>
+              <div className="rounded-xl border border-slate-700 bg-slate-950/50 px-3 py-3 text-xs text-slate-300 break-all">
+                {relayStationDisplayUrl || "暂未配置中转站链接：可在 API 服务配置中填写，或发布时注入 YUNRUI_RELAY_STATION_URL。"}
+              </div>
+              <div className="flex gap-2 flex-wrap">
                 <button
-                  onClick={() => void handleOpenCommunityLink("https://github.com/3445286649/openclaw-deploy.git", "已尝试打开 GitHub 项目")}
-                  className="w-full flex items-center justify-between rounded-lg border border-slate-700 bg-slate-900/70 px-3 py-2 text-xs text-slate-200 hover:border-slate-500"
+                  onClick={() => void openRelayStation()}
+                  disabled={!relayStationDisplayUrl}
+                  className="rounded-lg border border-cyan-600 bg-cyan-700/80 px-4 py-2 text-sm text-white hover:bg-cyan-600 disabled:opacity-50"
                 >
-                  打开 GitHub 项目
-                  <ExternalLink className="w-3 h-3" />
+                  打开云睿中转站
+                </button>
+                <button
+                  onClick={() => {
+                    setApiEntryMode("own");
+                    setShowCommunityHub(false);
+                    handleStepChange(2);
+                  }}
+                  className="rounded-lg border border-emerald-700 bg-emerald-700/70 px-4 py-2 text-sm text-emerald-50 hover:bg-emerald-600"
+                >
+                  我已有 Key，去填写
                 </button>
               </div>
-
-              <div className="rounded-xl border border-slate-700 bg-slate-800/50 p-4 space-y-3">
-                <div>
-                  <p className="text-sm font-medium text-slate-100">QQ群</p>
-                  <p className="mt-1 text-xs text-slate-400">群号：1085253453。适合加群咨询、领取测试额度和交流配置问题。</p>
-                </div>
-                <div className="rounded-lg border border-slate-700 bg-slate-950/40 px-3 py-2 text-xs text-slate-300">
-                  openclaw 一键部署群：1085253453
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() =>
-                      void handleOpenCommunityLink(
-                        "mqqapi://card/show_pslcard?src_type=internal&version=1&uin=1085253453&card_type=group&source=qrcode",
-                        "已尝试唤起 QQ 加群"
-                      )
-                    }
-                    className="flex-1 rounded-lg border border-slate-700 bg-slate-900/70 px-3 py-2 text-xs text-slate-200 hover:border-slate-500"
-                  >
-                    尝试打开 QQ
-                  </button>
-                  <button
-                    onClick={() => void handleCopyCommunityText("1085253453", "QQ群号")}
-                    className="flex-1 rounded-lg border border-slate-700 bg-slate-900/70 px-3 py-2 text-xs text-slate-200 hover:border-slate-500"
-                  >
-                    复制群号
-                  </button>
-                  <button
-                    onClick={() => setCommunityHubView("qq-qr")}
-                    className="flex-1 rounded-lg border border-sky-700/60 bg-sky-900/20 px-3 py-2 text-xs text-sky-100 hover:border-sky-500"
-                  >
-                    查看二维码
-                  </button>
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-slate-700 bg-slate-800/50 p-4 space-y-3">
-                <div>
-                  <p className="text-sm font-medium text-slate-100">Telegram 群</p>
-                  <p className="mt-1 text-xs text-slate-400">如果电脑已安装 Telegram 客户端，点击后会直接尝试跳转。</p>
-                </div>
-                <div className="rounded-lg border border-slate-700 bg-slate-950/40 px-3 py-2 text-xs text-slate-300 break-all">
-                  tg://openmessage?chat_id=5292442705
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => void handleOpenTelegramCommunity()}
-                    className="flex-1 rounded-lg border border-slate-700 bg-slate-900/70 px-3 py-2 text-xs text-slate-200 hover:border-slate-500"
-                  >
-                    打开 Telegram 群
-                  </button>
-                  <button
-                    onClick={() => void handleOpenCommunityLink("https://web.telegram.org/", "已打开 Telegram Web")}
-                    className="flex-1 rounded-lg border border-slate-700 bg-slate-900/70 px-3 py-2 text-xs text-slate-200 hover:border-slate-500"
-                  >
-                    打开 Telegram Web
-                  </button>
-                  <button
-                    onClick={() => void handleCopyCommunityText("tg://openmessage?chat_id=5292442705", "Telegram 链接")}
-                    className="flex-1 rounded-lg border border-slate-700 bg-slate-900/70 px-3 py-2 text-xs text-slate-200 hover:border-slate-500"
-                  >
-                    复制链接
-                  </button>
-                </div>
-              </div>
             </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] gap-4 items-start">
-                <div className="rounded-2xl border border-slate-700 bg-slate-800/50 p-4">
-                  <img
-                    src={qqCommunityQrSrc}
-                    alt="QQ群二维码"
-                    className="w-full rounded-2xl border border-slate-700 bg-slate-950/40"
-                    onError={() => setCommunityActionResult("QQ群二维码加载失败，请检查项目资源 public/community/qq-group.png。")}
-                  />
-                </div>
-                <div className="rounded-2xl border border-slate-700 bg-slate-800/40 p-4 space-y-3">
-                  <div>
-                    <p className="text-base font-semibold text-slate-100">QQ群二维码</p>
-                    <p className="mt-1 text-sm text-slate-400">
-                      可以直接用手机 QQ 扫码加入。如果电脑上安装了 QQ，也可以直接尝试唤起 QQ 加群。
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-slate-700 bg-slate-950/40 px-3 py-3 text-sm text-slate-200">
-                    群名：openclaw 一键部署群
-                    <div className="mt-1 text-slate-400">群号：1085253453</div>
-                  </div>
-                  <div className="flex gap-2 flex-wrap">
-                    <button
-                      onClick={() =>
-                        void handleOpenCommunityLink(
-                          "mqqapi://card/show_pslcard?src_type=internal&version=1&uin=1085253453&card_type=group&source=qrcode",
-                          "已尝试唤起 QQ 加群"
-                        )
-                      }
-                      className="rounded-lg border border-slate-700 bg-slate-900/70 px-3 py-2 text-xs text-slate-200 hover:border-slate-500"
-                    >
-                      尝试打开 QQ
-                    </button>
-                    <button
-                      onClick={() => void handleCopyCommunityText("1085253453", "QQ群号")}
-                      className="rounded-lg border border-slate-700 bg-slate-900/70 px-3 py-2 text-xs text-slate-200 hover:border-slate-500"
-                    >
-                      复制群号
-                    </button>
-                    <button
-                      onClick={() => setCommunityHubView("links")}
-                      className="rounded-lg border border-sky-700/60 bg-sky-900/20 px-3 py-2 text-xs text-sky-100 hover:border-sky-500"
-                    >
-                      返回快捷入口
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+
+            <div className="rounded-xl border border-slate-700 bg-slate-950/40 px-3 py-2 text-xs text-slate-400">
+              合规说明：云睿OpenClaw 基于 OpenClaw 开源项目定制发布，保留 LICENSE 与 MIT 协议信息；本入口仅用于云睿 API Key 获取与配置引导。
+            </div>
 
             {communityActionResult && (
               <div className="rounded-xl border border-slate-700 bg-slate-950/40 px-3 py-2 text-xs text-slate-300 whitespace-pre-wrap">
@@ -10315,10 +10161,13 @@ function App() {
       {/* Footer */}
       <footer className="border-t border-slate-700 px-6 py-3 flex justify-between items-center">
         <button
-          onClick={() => openUrl("https://clawd.bot/docs")}
-          className="text-slate-500 hover:text-slate-300 text-sm flex items-center gap-1"
+          onClick={() => {
+            setApiEntryMode("relay");
+            setShowCommunityHub(true);
+          }}
+          className="text-cyan-300 hover:text-cyan-100 text-sm flex items-center gap-1"
         >
-          官方文档 <ExternalLink className="w-3 h-3" />
+          云睿中转站 / 获取 API Key <ExternalLink className="w-3 h-3" />
         </button>
         {currentPrimaryNav === "home" && step < 3 && (
           <button

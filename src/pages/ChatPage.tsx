@@ -683,10 +683,10 @@ const ChatPage = memo(function ChatPage({
         preferredGatewayByAgent={preferredGatewayByAgent}
         onPreferredGatewayChange={onPreferredGatewayChange}
       />
-      <div className="rounded-xl border border-emerald-700/40 bg-emerald-950/20 p-4 text-sm text-emerald-100 space-y-2">
-        <p className="font-medium text-emerald-200">帮助与 QQ 群交流</p>
+      <div className="rounded-xl border border-cyan-700/40 bg-cyan-950/20 p-4 text-sm text-cyan-100 space-y-2">
+        <p className="font-medium text-cyan-200">云睿 API Key 提示</p>
         <p>{deploySuccessDialog}</p>
-        <p className="text-emerald-200/90">欢迎进群交流使用体验、部署问题和功能建议。</p>
+        <p className="text-cyan-200/90">没有 Key 时请从云睿中转站获取；已有 Key 的用户可以直接填写自己的 Key。</p>
       </div>
     </div>
   );

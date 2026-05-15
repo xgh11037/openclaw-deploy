@@ -376,15 +376,11 @@ export_diagnostic() {
   echo -e "${GREEN}[OK] 诊断已导出: $fpath${NC}"
 }
 
-# 打开文档
+# 查看帮助
 open_docs() {
-  local url="https://docs.openclaw.ai/cli"
-  echo -e "${CYAN}文档: $url${NC}"
-  if command -v xdg-open &>/dev/null; then
-    xdg-open "$url" 2>/dev/null &
-  elif command -v open &>/dev/null; then
-    open "$url" 2>/dev/null &
-  fi
+  echo -e "${CYAN}云睿OpenClaw 帮助${NC}"
+  echo -e "请优先查看发布包内的 使用文档.md 与 云睿OpenClaw发布说明.md"
+  echo -e "API Key 获取入口：云睿中转站 / API Key"
 }
 
 # 嗅探 OpenClaw 安装位置（与 find_openclaw 检测逻辑一致，避免「已安装」但「无可删除」）
@@ -532,7 +528,7 @@ show_header() {
   echo -e "  [5]  检查更新"
   echo -e "  [6]  打开对话界面"
   echo -e "  [7]  配置路径 - 设置 OPENCLAW_STATE_DIR"
-  echo -e "  [8]  帮助与文档"
+  echo -e "  [8]  帮助与说明"
   echo -e "  [9]  安装管理 - 嗅探 / 删除 / 热迁移"
   echo -e "  [10] 工具箱 - 备份 / 恢复 / 诊断 / Skills / 最小修复"
   echo -e "  [0]  退出"

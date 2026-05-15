@@ -44,6 +44,7 @@ jobs:
         shell: pwsh
         env:
           VITE_YUNRUI_RELAY_STATION_URL: ${{ secrets.YUNRUI_RELAY_STATION_URL }}
+          VITE_YUNRUI_RELAY_API_BASE_URL: ${{ secrets.YUNRUI_RELAY_API_BASE_URL }}
         run: ./scripts/build-release.ps1
 
       - name: Upload release folder

@@ -2,9 +2,9 @@
  * Auto-Updater Module
  * Handles automatic application updates using electron-updater
  *
- * Update providers are configured in electron-builder.yml (OSS primary, GitHub fallback).
+ * Update providers are configured in electron-builder.yml (configured update feed).
  * For prerelease channels (alpha, beta), the feed URL is overridden at runtime
- * to point at the channel-specific OSS directory (e.g. /alpha/, /beta/).
+ * to point at the channel-specific update directory (e.g. /alpha/, /beta/).
  */
 import { autoUpdater, UpdateInfo, ProgressInfo, UpdateDownloadedEvent } from 'electron-updater';
 import { BrowserWindow, app, ipcMain } from 'electron';
@@ -13,7 +13,7 @@ import { EventEmitter } from 'events';
 import { setQuitting } from './app-state';
 
 /** Base CDN URL (without trailing channel path) */
-const OSS_BASE_URL = 'https://oss.intelli-spectrum.com';
+const YUNRUI_UPDATE_BASE_URL = 'https://www.yunruiai.xyz/updates/yunrui-openclaw';
 
 export interface UpdateStatus {
   status: 'idle' | 'checking' | 'available' | 'not-available' | 'downloading' | 'downloaded' | 'error';
@@ -73,7 +73,7 @@ export class AppUpdater extends EventEmitter {
     // alpha -> /alpha/alpha-mac.yml, beta -> /beta/beta-mac.yml, etc.
     const version = app.getVersion();
     const channel = detectChannel(version);
-    const feedUrl = `${OSS_BASE_URL}/${channel}`;
+    const feedUrl = `${YUNRUI_UPDATE_BASE_URL}/${channel}`;
 
     logger.info(`[Updater] Version: ${version}, channel: ${channel}, feedUrl: ${feedUrl}`);
 

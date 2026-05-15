@@ -1,0 +1,93 @@
+name: Build Yunrui OpenClaw Windows
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref to build (branch, tag, or SHA). Leave empty for current ref.'
+        required: false
+        default: ''
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - 'electron/**'
+      - 'resources/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'electron-builder.yml'
+      - '.github/workflows/build-yunrui-windows.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build-yunrui-windows:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      YUNRUI_RELAY_STATION_URL: ${{ secrets.YUNRUI_RELAY_STATION_URL || 'https://www.yunruiai.xyz' }}
+      YUNRUI_RELAY_API_BASE_URL: ${{ secrets.YUNRUI_RELAY_API_BASE_URL || 'https://www.yunruiai.xyz/v1' }}
+      VITE_YUNRUI_RELAY_STATION_URL: ${{ secrets.YUNRUI_RELAY_STATION_URL || 'https://www.yunruiai.xyz' }}
+      VITE_YUNRUI_RELAY_API_BASE_URL: ${{ secrets.YUNRUI_RELAY_API_BASE_URL || 'https://www.yunruiai.xyz/v1' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate extension bridge
+        run: pnpm run ext:bridge
+
+      - name: Run Yunrui release checks
+        run: pnpm run check:yunrui
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Build renderer and Electron bundles
+        run: pnpm run build:vite
+
+      - name: Download uv binaries for Windows
+        run: pnpm run uv:download:win
+
+      - name: Package Windows (no publish)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm run package:win
+
+      - name: Upload Yunrui Windows release folder
+        uses: actions/upload-artifact@v4
+        with:
+          name: Yunrui-OpenClaw-release-folder
+          path: release/**
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload Yunrui Windows installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: Yunrui-OpenClaw-Windows-installers
+          path: |
+            release/*.exe
+            release/*.msi
+            release/*.yml
+            release/*.blockmap
+          if-no-files-found: warn
+          retention-days: 7

@@ -176,22 +176,16 @@ export function createMenu(): void {
         {
           label: 'Documentation',
           click: async () => {
-            await shell.openExternal('https://claw-x.com');
+            await shell.openExternal(process.env.YUNRUI_RELAY_STATION_URL || 'https://www.yunruiai.xyz');
           },
         },
         {
-          label: 'Report Issue',
+          label: 'API Key 帮助',
           click: async () => {
-            await shell.openExternal('https://github.com/ValueCell-ai/ClawX/issues');
+            await shell.openExternal(process.env.YUNRUI_RELAY_STATION_URL || 'https://www.yunruiai.xyz');
           },
         },
-        { type: 'separator' },
-        {
-          label: 'OpenClaw Documentation',
-          click: async () => {
-            await shell.openExternal('https://docs.openclaw.ai');
-          },
-        },
+
       ],
     },
   ];

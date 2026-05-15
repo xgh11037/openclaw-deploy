@@ -216,7 +216,7 @@
         },
         "signal": {
             "description": "使用 signal-cli 连接 Signal",
-            "docsUrl": "https://docs.openclaw.ai/zh-CN/channels/signal",
+            "docsUrl": "https://www.yunruiai.xyz",
             "fields": {
                 "phoneNumber": {
                     "label": "手机号码",
@@ -271,7 +271,7 @@
         },
         "imessage": {
             "description": "通过 BlueBubbles (macOS) 连接 iMessage",
-            "docsUrl": "https://docs.openclaw.ai/zh-CN/channels/bluebubbles",
+            "docsUrl": "https://www.yunruiai.xyz",
             "fields": {
                 "serverUrl": {
                     "label": "BlueBubbles 服务器地址",
@@ -290,7 +290,7 @@
         },
         "matrix": {
             "description": "连接到 Matrix 协议",
-            "docsUrl": "https://docs.openclaw.ai/zh-CN/channels/matrix",
+            "docsUrl": "https://www.yunruiai.xyz",
             "fields": {
                 "homeserver": {
                     "label": "Homeserver 地址",
@@ -309,7 +309,7 @@
         },
         "line": {
             "description": "连接 LINE Messaging API",
-            "docsUrl": "https://docs.openclaw.ai/channels/line",
+            "docsUrl": "https://www.yunruiai.xyz",
             "fields": {
                 "channelAccessToken": {
                     "label": "频道访问令牌",
@@ -328,7 +328,7 @@
         },
         "msteams": {
             "description": "通过 Bot Framework 连接 Microsoft Teams",
-            "docsUrl": "https://docs.openclaw.ai/channels/msteams",
+            "docsUrl": "https://www.yunruiai.xyz",
             "fields": {
                 "appId": {
                     "label": "应用 ID",
@@ -348,7 +348,7 @@
         },
         "googlechat": {
             "description": "通过 Webhook 连接 Google Chat",
-            "docsUrl": "https://docs.openclaw.ai/channels/googlechat",
+            "docsUrl": "https://www.yunruiai.xyz",
             "fields": {
                 "serviceAccountKey": {
                     "label": "服务账号 JSON 路径",
@@ -364,7 +364,7 @@
         },
         "mattermost": {
             "description": "通过 Bot API 连接 Mattermost",
-            "docsUrl": "https://docs.openclaw.ai/channels/mattermost",
+            "docsUrl": "https://www.yunruiai.xyz",
             "fields": {
                 "serverUrl": {
                     "label": "服务器地址",

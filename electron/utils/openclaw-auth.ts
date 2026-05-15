@@ -1387,6 +1387,8 @@ export async function setOpenClawDefaultModelWithOverride(
         headers: override.headers,
         authHeader: override.authHeader,
         modelIds: [modelId, ...fallbackModelIds],
+        includeRegistryModels: true,
+        mergeExistingModels: true,
       });
     }
 

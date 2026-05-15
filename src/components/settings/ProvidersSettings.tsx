@@ -1226,7 +1226,7 @@ function AddProviderDialog({
       if (requiresKey && normalizedApiKey) {
         const result = await onValidateKey(selectedType, normalizedApiKey, {
           baseUrl: baseUrl.trim() || undefined,
-          apiProtocol: (selectedType === 'custom' || selectedType === 'ollama') ? apiProtocol : undefined,
+          apiProtocol: (selectedType === 'custom' || selectedType === 'ollama' || selectedType === 'yunrui-relay') ? apiProtocol : undefined,
         });
         if (!result.valid) {
           setValidationError(result.error || t('aiProviders.toast.invalidKey'));
@@ -1248,7 +1248,7 @@ function AddProviderDialog({
         normalizedApiKey,
         {
           baseUrl: baseUrl.trim() || undefined,
-          apiProtocol: (selectedType === 'custom' || selectedType === 'ollama') ? apiProtocol : undefined,
+          apiProtocol: (selectedType === 'custom' || selectedType === 'ollama' || selectedType === 'yunrui-relay') ? apiProtocol : undefined,
           headers: userAgent.trim() ? { 'User-Agent': userAgent.trim() } : undefined,
           model: resolveProviderModelForSave(typeInfo, modelId, devModeUnlocked),
           authMode: useOAuthFlow ? (preferredOAuthMode || 'oauth_device') : selectedType === 'ollama'
@@ -1521,7 +1521,7 @@ function AddProviderDialog({
                     )}
                   </div>
                 )}
-                {selectedType === 'custom' && (
+                {(selectedType === 'custom' || selectedType === 'yunrui-relay') && (
                 <div className="space-y-2.5">
                   <Label className={labelClasses}>{t('aiProviders.dialog.protocol', 'Protocol')}</Label>
                   <div className="flex gap-2 text-meta">

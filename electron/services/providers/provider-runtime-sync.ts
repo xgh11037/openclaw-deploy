@@ -441,10 +441,17 @@ async function buildAgentModelProviderEntry(
     }
   }
 
+  const registryModels = (meta?.models ?? []).map((model) => ({
+    ...model,
+    cost: piAiModelsJsonModelEntry(model.id).cost,
+  }));
+  const runtimeModel = piAiModelsJsonModelEntry(modelId);
+  const models = [runtimeModel, ...registryModels.filter((model) => model.id !== modelId)];
+
   return {
     baseUrl,
     api,
-    models: [piAiModelsJsonModelEntry(modelId)],
+    models,
     apiKey,
     authHeader,
   };

@@ -973,6 +973,7 @@ function makeTicketSummary(action: string, error: unknown, extra?: string): stri
 }
 
 function getAiServiceLabel(provider: string): string {
+  if (provider === "relay") return "云睿中转站 / OpenAI 兼容";
   return provider === "kimi" ? "Kimi" : "硅基流动";
 }
 
@@ -1076,19 +1077,28 @@ const TUNING_NAV_ITEMS = [
 ] as const;
 
 const AI_SERVICE_OPTIONS = [
-  { id: "openai", label: "硅基流动", desc: "新手默认推荐，价格友好，适合高频使用" },
-  { id: "kimi", label: "Kimi", desc: "长文本更稳，适合深度问答和长上下文" },
-  { id: "official", label: "官方线路", desc: "后续上线，敬请期待" },
+  { id: "relay", label: "云睿中转站", desc: "推荐：用中转站 API Key 接 GPT、Claude、Gemini 等国外模型" },
+  { id: "openai", label: "国内兼容接口", desc: "可填硅基流动 / DeepSeek / 其它 OpenAI 兼容地址" },
+  { id: "kimi", label: "Kimi", desc: "已有 Kimi Key 时使用，长文本更稳" },
 ] as const;
 
 const DEFAULT_OPENAI_BASE_URL = "https://api.siliconflow.cn/v1";
 const DEFAULT_KIMI_BASE_URL = "https://api.moonshot.cn/v1";
 const DEFAULT_RELAY_STATION_URL = (import.meta.env.VITE_YUNRUI_RELAY_STATION_URL || "").trim();
-const RECOMMENDED_MODEL_FALLBACK = "deepseek-ai/DeepSeek-V3";
+const DEFAULT_RELAY_API_BASE_URL = (import.meta.env.VITE_YUNRUI_RELAY_API_BASE_URL || "").trim();
+const RECOMMENDED_MODEL_FALLBACK = "gpt-4o-mini";
 
-/** 固定硅基流动模型列表（引流用，后续接入自建中转支持更多） */
+const YUNRUI_RELAY_MODELS: { id: string; label: string }[] = [
+  { id: "gpt-4o-mini", label: "GPT-4o mini（推荐，便宜稳定）" },
+  { id: "gpt-4o", label: "GPT-4o（通用旗舰）" },
+  { id: "gpt-4.1", label: "GPT-4.1（代码 / 长任务）" },
+  { id: "claude-3-5-sonnet-latest", label: "Claude 3.5 Sonnet（写作 / 代码）" },
+  { id: "claude-3-5-haiku-latest", label: "Claude 3.5 Haiku（快速低价）" },
+  { id: "gemini-2.0-flash", label: "Gemini 2.0 Flash（快且便宜）" },
+];
+
 const FIXED_SILICONFLOW_MODELS: { id: string; label: string }[] = [
-  { id: "deepseek-ai/DeepSeek-V3", label: "DeepSeek V3（推荐）" },
+  { id: "deepseek-ai/DeepSeek-V3", label: "DeepSeek V3（国内兼容）" },
   { id: "Qwen/Qwen2.5-72B-Instruct", label: "Qwen2.5 72B" },
   { id: "GLM-4-9B-Chat", label: "GLM-4-9B / GLM-5" },
   { id: "moonshotai/Kimi-K2-Instruct-0905", label: "Kimi K2（可对话）" },
@@ -1140,6 +1150,7 @@ const DEPLOY_SUCCESS_DIALOG =
   "恭喜部署完成！如果还没有 API Key，可以从左侧“云睿中转站 / API Key”入口获取；已拥有 API Key 的用户也可以直接填写自己的 Key。";
 
 function defaultBaseUrlForProvider(provider: string): string {
+  if (provider === "relay") return DEFAULT_RELAY_API_BASE_URL;
   if (provider === "kimi") return DEFAULT_KIMI_BASE_URL;
   if (provider === "qwen" || provider === "bailian") return "https://dashscope.aliyuncs.com/compatible-mode/v1";
   if (provider === "deepseek") return "https://api.deepseek.com/v1";
@@ -1241,7 +1252,7 @@ function App() {
   const [showApiKey, setShowApiKey] = useState(false);
   const [apiEntryMode, setApiEntryMode] = useState<"undecided" | "own" | "relay">("undecided");
   const [relayStationUrl, setRelayStationUrl] = useState("");
-  const [baseUrl, setBaseUrl] = useState(DEFAULT_OPENAI_BASE_URL);
+  const [baseUrl, setBaseUrl] = useState(DEFAULT_RELAY_API_BASE_URL || DEFAULT_OPENAI_BASE_URL);
   const [proxyUrl, setProxyUrl] = useState("");
   const [noProxy, setNoProxy] = useState("");
   const [customConfigPath, setCustomConfigPath] = useState("");
@@ -7647,9 +7658,11 @@ function App() {
   const envReady = nodeCheck?.ok && npmCheck?.ok;
   const canProceed = step === 0 ? envReady : true;
   const currentAiServiceLabel = getAiServiceLabel(provider);
-  const visibleAiModels = provider === "kimi"
-    ? [{ id: "moonshotai/Kimi-K2-Instruct-0905", label: "Kimi K2（长文本推荐）" }]
-    : FIXED_SILICONFLOW_MODELS;
+  const visibleAiModels = provider === "relay"
+    ? YUNRUI_RELAY_MODELS
+    : provider === "kimi"
+      ? [{ id: "moonshotai/Kimi-K2-Instruct-0905", label: "Kimi K2（长文本推荐）" }]
+      : FIXED_SILICONFLOW_MODELS;
   const installReady = !!(localInfo?.installed || openclawCheck?.ok);
   const aiReady = !!(keySyncStatus?.env_key_prefix || runtimeModelInfo?.key_prefix || apiKey.trim());
   const chatReady = !!selectedAgentId;
@@ -8619,28 +8632,34 @@ function App() {
                 <div className="rounded-2xl border border-slate-700 bg-slate-800/50 p-5 space-y-4">
                   <div>
                     <p className="text-sm font-medium text-slate-100">服务渠道选择</p>
-                    <p className="text-xs text-slate-400 mt-1">当前先固定硅基流动和 Kimi，后面可自然扩展到你的官方线路。</p>
+                    <p className="text-xs text-slate-400 mt-1">默认推荐云睿中转站：用一个 OpenAI 兼容接口接 GPT、Claude、Gemini 等国外模型；国内接口只是备选。</p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     {AI_SERVICE_OPTIONS.map((option) => {
                       const selected =
+                        (option.id === "relay" && provider === "relay") ||
                         (option.id === "kimi" && provider === "kimi") ||
-                        (option.id === "openai" && provider !== "kimi");
-                      const disabled = option.id === "official";
+                        (option.id === "openai" && provider !== "kimi" && provider !== "relay");
+                      const disabled = false;
                       return (
                         <button
                           key={option.id}
                           disabled={disabled}
                           onClick={() => {
-                            if (option.id === "official") return;
-                            if (option.id === "kimi") {
+                            if (option.id === "relay") {
+                              setProvider("relay");
+                              setBaseUrl(DEFAULT_RELAY_API_BASE_URL);
+                              setSelectedModel(RECOMMENDED_MODEL_FALLBACK);
+                              setApiEntryMode("relay");
+                              setShowAiAdvancedSettings(true);
+                            } else if (option.id === "kimi") {
                               setProvider("kimi");
                               setBaseUrl(DEFAULT_KIMI_BASE_URL);
                               setSelectedModel("moonshotai/Kimi-K2-Instruct-0905");
                             } else {
                               setProvider("openai");
                               setBaseUrl(DEFAULT_OPENAI_BASE_URL);
-                              setSelectedModel(RECOMMENDED_MODEL_FALLBACK);
+                              setSelectedModel("deepseek-ai/DeepSeek-V3");
                             }
                           }}
                           className={`rounded-xl border p-4 text-left transition ${
@@ -8663,7 +8682,7 @@ function App() {
                   <div className="flex items-center justify-between gap-2 flex-wrap">
                     <div>
                       <p className="text-sm font-medium text-slate-100">模型方案选择</p>
-                      <p className="text-xs text-slate-400 mt-1">默认展示固定低成本模型，先保证稳定、便宜、能跑通。</p>
+                      <p className="text-xs text-slate-400 mt-1">中转站模式下可直接选 GPT / Claude / Gemini；如果你的中转站模型名不同，也可在高级选项里手动填写。</p>
                     </div>
                     <span className="text-xs text-slate-500">当前渠道：{currentAiServiceLabel}</span>
                   </div>
@@ -8680,7 +8699,7 @@ function App() {
                       >
                         <p className="font-medium">{model.label}</p>
                         <p className="text-xs mt-2 text-slate-400">
-                          {index === 0 ? "默认推荐，适合大多数用户" : provider === "kimi" ? "长文本问答更稳" : "便宜模型，适合高频使用"}
+                          {index === 0 ? "默认推荐，适合大多数用户" : provider === "relay" ? "通过中转站 OpenAI 兼容接口接入" : provider === "kimi" ? "长文本问答更稳" : "国内兼容模型，适合备选使用"}
                         </p>
                       </button>
                     ))}
@@ -8751,7 +8770,7 @@ function App() {
                     <div className="rounded-xl border border-sky-700/60 bg-sky-950/20 p-4 space-y-3">
                       <div>
                         <p className="text-sm font-medium text-sky-100">中转站入口</p>
-                        <p className="text-xs text-sky-200/80 mt-1">把你的中转站链接填在这里，按钮会直接打开它。</p>
+                        <p className="text-xs text-sky-200/80 mt-1">这里是购买 / 获取 Key 的网页入口；真正接模型的 API 地址在下面“高级选项 → 自定义 API 地址”。</p>
                       </div>
                       <div className="flex gap-2">
                         <input
@@ -8779,7 +8798,7 @@ function App() {
                           打开
                         </button>
                       </div>
-                      <p className="text-xs text-slate-400">拿到 Key 之后，再切回“我已经有 API Key”。</p>
+                      <p className="text-xs text-slate-400">拿到 Key 后，点“我已拿到 Key，去填写”，在 API Key 输入框粘贴；国外模型通过云睿中转站的 OpenAI 兼容 API 地址接入。</p>
                       <button
                         type="button"
                         onClick={() => setApiEntryMode("own")}
@@ -8797,7 +8816,7 @@ function App() {
                           type={showApiKey ? "text" : "password"}
                           value={apiKey}
                           onChange={(e) => setApiKey(e.target.value)}
-                          placeholder={provider === "kimi" ? "输入你的 Kimi API Key" : "输入你的硅基流动 API Key"}
+                          placeholder={provider === "relay" ? "输入云睿中转站 API Key" : provider === "kimi" ? "输入你的 Kimi API Key" : "输入你的 API Key"}
                           className="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-4 py-3"
                         />
                         <button
@@ -8878,7 +8897,8 @@ function App() {
                         onChange={(e) => setProvider(e.target.value)}
                         className="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2"
                       >
-                        <option value="openai">OpenAI 兼容</option>
+                        <option value="relay">云睿中转站 / OpenAI 兼容</option>
+                        <option value="openai">OpenAI 兼容 / 国内接口</option>
                         <option value="kimi">Kimi</option>
                         <option value="deepseek">DeepSeek</option>
                         <option value="qwen">通义千问</option>
@@ -8892,7 +8912,7 @@ function App() {
                         type="text"
                         value={baseUrl}
                         onChange={(e) => setBaseUrl(e.target.value)}
-                        placeholder={DEFAULT_OPENAI_BASE_URL}
+                        placeholder={provider === "relay" ? "填云睿中转站 API 地址，例如 https://.../v1" : DEFAULT_OPENAI_BASE_URL}
                         className="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2"
                       />
                     </div>
@@ -8960,7 +8980,7 @@ function App() {
                   <div className="text-sm text-slate-300 space-y-2">
                     <p>服务渠道：{currentAiServiceLabel}</p>
                     <p>当前模型：{selectedModel || "未选择"}</p>
-                    <p>推荐场景：{provider === "kimi" ? "长文本问答" : "高频聊天 / 代码 / 日常使用"}</p>
+                    <p>推荐场景：{provider === "relay" ? "国外模型 / GPT / Claude / Gemini" : provider === "kimi" ? "长文本问答" : "国内兼容 / 备用接口"}</p>
                     <p className={aiReady ? "text-emerald-300" : "text-amber-300"}>{aiReady ? "状态：已配置" : "状态：待测试"}</p>
                   </div>
                 </div>
@@ -8969,16 +8989,16 @@ function App() {
                   <p className="text-sm font-medium text-slate-100">推荐组合</p>
                   <div className="space-y-2 text-xs text-slate-300">
                     <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-3">
-                      <p className="font-medium text-slate-100">新手推荐</p>
-                      <p className="mt-1 text-slate-400">硅基流动 + 默认推荐模型，先用最低决策成本跑通。</p>
+                      <p className="font-medium text-slate-100">主推推荐</p>
+                      <p className="mt-1 text-slate-400">云睿中转站 + OpenAI 兼容地址 + GPT/Claude/Gemini 模型，国内用户不用自己去国外买 API。</p>
                     </div>
                     <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-3">
                       <p className="font-medium text-slate-100">性价比推荐</p>
-                      <p className="mt-1 text-slate-400">适合高频聊天，优先控制 API 成本。</p>
+                      <p className="mt-1 text-slate-400">中转站里优先选 mini / flash / haiku 这类低价模型，适合高频聊天。</p>
                     </div>
                     <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-3">
                       <p className="font-medium text-slate-100">代码推荐</p>
-                      <p className="mt-1 text-slate-400">优先选你的主推代码模型，后续可平滑迁到官方线路。</p>
+                      <p className="mt-1 text-slate-400">中转站里选 GPT-4.1 / Claude Sonnet 等代码模型；如果模型名不同，可在高级选项手动填写。</p>
                     </div>
                   </div>
                 </div>
